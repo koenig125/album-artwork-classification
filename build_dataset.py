@@ -1,90 +1,149 @@
-"""Split the SIGNS dataset into train/dev/test and resize images to 64x64.
+"""Split the MUMU dataset into train/dev/test and resize images to 300x300.
 
-The SIGNS dataset comes in the following format:
-    train_signs/
-        0_IMG_5864.jpg
-        ...
-    test_signs/
-        0_IMG_5942.jpg
-        ...
+The MuMu dataset comes in the following format:
+    AMAZON_ID.jpg
+    ...
 
-Original images have size (3024, 3024).
-Resizing to (64, 64) reduces the dataset size from 1.16 GB to 4.7 MB, and loading smaller images
-makes training faster.
-
-We already have a test set created, so we only need to split "train_signs" into train and dev sets.
-Because we don't have a lot of images and we want that the statistics on the dev set be as
-representative as possible, we'll take 20% of "train_signs" as dev set.
+Original images have various sizes at or below (300, 300). Images below (300, 300) resolution are
+resized to (300, 300) in order to ensure consistent input to network and full analysis of image details.
 """
 
 import argparse
+import json
+import csv
 import random
 import os
 
+import urllib.request as req
+import numpy as np
 from PIL import Image
 from tqdm import tqdm
 
-
-SIZE = 64
+SIZE = 300
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--data_dir', default='data/SIGNS', help="Directory with the SIGNS dataset")
-parser.add_argument('--output_dir', default='data/64x64_SIGNS', help="Where to write the new data")
+parser.add_argument('--data_dir', default='data/MUMU',
+                    help="Directory with MUMU album images")
+parser.add_argument('--output_dir', default='data/300x300_MUMU',
+                    help="Where to write the new data")
+parser.add_argument('--mumu_metadata', default='data/amazon_metadata_MuMu.json',
+                    help="File with MuMu metadata")
+parser.add_argument('--data_labels', default='data/MuMu_dataset_multi-label.csv',
+                    help="File with MuMu album genres")
 
 
-def resize_and_save(filename, output_dir, size=SIZE):
+def create_dir(dir_name):
+    """Create directory with check not to overwrite existing directory"""
+    if not os.path.exists(dir_name):
+        os.mkdir(dir_name)
+    else:
+        print("Warning: dir {} already exists".format(dir_name))
+
+
+def get_image_urls(mumu_metadata):
+    """Retrieve all urls for album cover images in the MuMu dataset"""
+    with open(mumu_metadata) as f:
+        data = json.load(f)
+    img_urls = dict()
+    for entry in data:
+        img_url = entry['imUrl']
+        img_id = entry['amazon_id']
+        img_urls[img_id] = img_url
+    return img_urls
+
+
+def download_images(img_urls, data_dir):
+    """Download album cover images from the MuMu dataset to `data_dir`"""
+    create_dir(data_dir)
+    for img_id, img_url in tqdm(img_urls.items()):
+        img_format = img_url[-4:]
+        img_file = os.path.join(data_dir, img_id + img_format)
+        req.urlretrieve(img_url, img_file)
+
+
+def generate_splits(filenames):
+    """Generate 80/10/10 train/dev/test splits for data"""
+    filenames.sort()
+    random.seed(230)
+    random.shuffle(filenames)
+    split_1 = int(0.8 * len(filenames))
+    split_2 = int(0.9 * len(filenames))
+    filenames_train = filenames[:split_1]
+    filenames_dev = filenames[split_1:split_2]
+    filenames_test = filenames[split_2:]
+    splits = {'train': filenames_train,
+              'dev': filenames_dev,
+              'test': filenames_test}
+    return splits
+
+
+def get_album_genres(f_genres):
+    """Retrieve genres for each album in the MuMu dataset"""
+    album_genres = dict()
+    with open(f_genres) as f:
+        data = csv.reader(f)
+        next(data) # skip header
+        for row in data:
+            img_id = row[0] # amazon_id
+            genres = list(row[5].split(','))
+            album_genres[img_id] = genres
+    return album_genres
+
+
+def generate_labels(filenames, album_genres, output_dir, split):
+    """Convert genres for each album to binary vector label and save to `output_dir`"""
+    genre_list = list(set([genre for genres in album_genres.values() for genre in genres]))
+    genre_list.sort()
+    labels = []
+    for f in filenames:
+        img_id = f.split('/')[-1][:-4]
+        genres = album_genres[img_id]
+        album_label = [1 if g in genres else 0 for g in genre_list]
+        labels.append(album_label)
+    output_file = os.path.join(output_dir, 'y_' + split + '.npy')
+    np.save(output_file, np.array(labels))
+
+
+def resize_and_save(filenames, output_dir, size=SIZE):
     """Resize the image contained in `filename` and save it to the `output_dir`"""
-    image = Image.open(filename)
-    # Use bilinear interpolation instead of the default "nearest neighbor" method
-    image = image.resize((size, size), Image.BILINEAR)
-    image.save(os.path.join(output_dir, filename.split('/')[-1]))
+    for filename in tqdm(filenames):
+        image = Image.open(filename)
+        image = image.resize((size, size), Image.BILINEAR)
+        image.save(os.path.join(output_dir, filename.split('/')[-1]))
 
 
 if __name__ == '__main__':
     args = parser.parse_args()
 
-    assert os.path.isdir(args.data_dir), "Couldn't find the dataset at {}".format(args.data_dir)
+    # Scrape album artwork if not already present
+    if not os.path.isdir(args.data_dir):
+        print("Dataset at {} not found. Scraping images now.".format(args.data_dir))
+        img_urls = get_image_urls(args.mumu_metadata)
+        download_images(img_urls, args.data_dir)
 
-    # Define the data directories
-    train_data_dir = os.path.join(args.data_dir, 'train_signs')
-    test_data_dir = os.path.join(args.data_dir, 'test_signs')
+    # Get the filenames in the data directory
+    filenames = [os.path.join(args.data_dir, f) for f in os.listdir(args.data_dir) if f.endswith('.jpg')]
 
-    # Get the filenames in each directory (train and test)
-    filenames = os.listdir(train_data_dir)
-    filenames = [os.path.join(train_data_dir, f) for f in filenames if f.endswith('.jpg')]
+    # Split into 80%/10%/10% train/dev/test
+    splits = generate_splits(filenames)
 
-    test_filenames = os.listdir(test_data_dir)
-    test_filenames = [os.path.join(test_data_dir, f) for f in test_filenames if f.endswith('.jpg')]
+    # Create new output data directory
+    create_dir(args.output_dir)
 
-    # Split the images in 'train_signs' into 80% train and 20% dev
-    # Make sure to always shuffle with a fixed seed so that the split is reproducible
-    random.seed(230)
-    filenames.sort()
-    random.shuffle(filenames)
+    # Preprocess train, dev and test images
+    album_genres = get_album_genres(args.data_labels)
+    for split, files in splits.items():
+        dir_split = os.path.join(args.output_dir, split)
+        create_dir(dir_split)
+        output_dir_images = os.path.join(dir_split, 'images')
+        create_dir(output_dir_images)
+        output_dir_genres = os.path.join(dir_split, 'genres')
+        create_dir(output_dir_genres)
 
-    split = int(0.8 * len(filenames))
-    train_filenames = filenames[:split]
-    dev_filenames = filenames[split:]
+        print("Processing {} data, saving to {}".format(split, output_dir_images))
+        resize_and_save(files, output_dir_images, size=SIZE)
 
-    filenames = {'train': train_filenames,
-                 'dev': dev_filenames,
-                 'test': test_filenames}
-
-    if not os.path.exists(args.output_dir):
-        os.mkdir(args.output_dir)
-    else:
-        print("Warning: output dir {} already exists".format(args.output_dir))
-
-    # Preprocess train, dev and test
-    for split in ['train', 'dev', 'test']:
-        output_dir_split = os.path.join(args.output_dir, '{}_signs'.format(split))
-        if not os.path.exists(output_dir_split):
-            os.mkdir(output_dir_split)
-        else:
-            print("Warning: dir {} already exists".format(output_dir_split))
-
-        print("Processing {} data, saving preprocessed data to {}".format(split, output_dir_split))
-        for filename in tqdm(filenames[split]):
-            resize_and_save(filename, output_dir_split, size=SIZE)
+        print("Generating {} labels, saving to {}".format(split, output_dir_genres))
+        generate_labels(files, album_genres, output_dir_genres, split)
 
     print("Done building dataset")

@@ -3,29 +3,28 @@
 import argparse
 import logging
 import os
-import random
 
+import numpy as np
 import tensorflow as tf
 
 from model.input_fn import input_fn
-from model.utils import Params
-from model.utils import set_logger
-from model.utils import save_dict_to_json
 from model.model_fn import model_fn
 from model.training import train_and_evaluate
+from model.utils import Params
+from model.utils import set_logger
 
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--model_dir', default='experiments/test',
                     help="Experiment directory containing params.json")
-parser.add_argument('--data_dir', default='data/64x64_SIGNS',
+parser.add_argument('--data_dir', default='data/300x300_MUMU',
                     help="Directory containing the dataset")
 parser.add_argument('--restore_from', default=None,
                     help="Optional, directory or file containing weights to reload before training")
 
 
 if __name__ == '__main__':
-    # Set the random seed for the whole graph for reproductible experiments
+    # Set the random seed for the whole graph for reproducible experiments
     tf.set_random_seed(230)
 
     # Load the parameters from json file
@@ -34,30 +33,29 @@ if __name__ == '__main__':
     assert os.path.isfile(json_path), "No json configuration file found at {}".format(json_path)
     params = Params(json_path)
 
-    # Check that we are not overwriting some previous experiment
-    # Comment these lines if you are developing your model and don't care about overwritting
-    model_dir_has_best_weights = os.path.isdir(os.path.join(args.model_dir, "best_weights"))
-    overwritting = model_dir_has_best_weights and args.restore_from is None
-    assert not overwritting, "Weights found in model_dir, aborting to avoid overwrite"
+    # Check that we are not overwriting some previous experiment (comment out if developing model)
+    # model_dir_has_best_weights = os.path.isdir(os.path.join(args.model_dir, "best_weights"))
+    # overwritting = model_dir_has_best_weights and args.restore_from is None
+    # assert not overwritting, "Weights found in model_dir, aborting to avoid overwrite"
 
     # Set the logger
     set_logger(os.path.join(args.model_dir, 'train.log'))
 
     # Create the input data pipeline
-    logging.info("Creating the datasets...")
+    logging.info("Creating the dataset...")
     data_dir = args.data_dir
-    train_data_dir = os.path.join(data_dir, "train_signs")
-    dev_data_dir = os.path.join(data_dir, "dev_signs")
+    train_images_dir = os.path.join(data_dir, "train/images")
+    dev_images_dir = os.path.join(data_dir, "dev/images")
+    train_genres_file = os.path.join(data_dir, "train/genres/y_train.npy")
+    dev_genres_file = os.path.join(data_dir, "dev/genres/y_dev.npy")
 
     # Get the filenames from the train and dev sets
-    train_filenames = [os.path.join(train_data_dir, f) for f in os.listdir(train_data_dir)
-                       if f.endswith('.jpg')]
-    eval_filenames = [os.path.join(dev_data_dir, f) for f in os.listdir(dev_data_dir)
-                      if f.endswith('.jpg')]
+    train_filenames = [os.path.join(train_images_dir, f) for f in os.listdir(train_images_dir) if f.endswith('.jpg')]
+    eval_filenames = [os.path.join(dev_images_dir, f) for f in os.listdir(dev_images_dir) if f.endswith('.jpg')]
 
-    # Labels will be between 0 and 5 included (6 classes in total)
-    train_labels = [int(f.split('/')[-1][0]) for f in train_filenames]
-    eval_labels = [int(f.split('/')[-1][0]) for f in eval_filenames]
+    # Labels will be binary vector of size 250 representing all genres
+    train_labels = np.load(train_genres_file)
+    eval_labels = np.load(dev_genres_file)
 
     # Specify the sizes of the dataset we train on and evaluate on
     params.train_size = len(train_filenames)

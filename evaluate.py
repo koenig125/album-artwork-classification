@@ -4,6 +4,7 @@ import argparse
 import logging
 import os
 
+import numpy as np
 import tensorflow as tf
 
 from model.input_fn import input_fn
@@ -16,7 +17,7 @@ from model.utils import set_logger
 parser = argparse.ArgumentParser()
 parser.add_argument('--model_dir', default='experiments/test',
                     help="Experiment directory containing params.json")
-parser.add_argument('--data_dir', default='data/64x64_SIGNS',
+parser.add_argument('--data_dir', default='data/300x300_MUMU',
                     help="Directory containing the dataset")
 parser.add_argument('--restore_from', default='best_weights',
                     help="Subdirectory of model dir or file containing the weights")
@@ -38,13 +39,14 @@ if __name__ == '__main__':
     # Create the input data pipeline
     logging.info("Creating the dataset...")
     data_dir = args.data_dir
-    test_data_dir = os.path.join(data_dir, "test_signs")
+    test_images_dir = os.path.join(data_dir, "test/images")
+    test_genres_file = os.path.join(data_dir, "test/genres/y_test.npy")
 
     # Get the filenames from the test set
-    test_filenames = os.listdir(test_data_dir)
-    test_filenames = [os.path.join(test_data_dir, f) for f in test_filenames if f.endswith('.jpg')]
+    test_filenames = [os.path.join(test_images_dir, f) for f in os.listdir(test_images_dir) if f.endswith('.jpg')]
 
-    test_labels = [int(f.split('/')[-1][0]) for f in test_filenames]
+    # Labels will be binary vector of size 250 representing all genres
+    test_labels = np.load(test_genres_file)
 
     # specify the size of the evaluation set
     params.eval_size = len(test_filenames)

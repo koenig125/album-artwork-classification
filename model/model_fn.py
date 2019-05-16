@@ -33,9 +33,9 @@ def build_model(is_training, inputs, params):
             out = tf.nn.relu(out)
             out = tf.layers.max_pooling2d(out, 2, 2)
 
-    assert out.get_shape().as_list() == [None, 4, 4, num_channels * 8]
+    assert out.get_shape().as_list() == [None, 18, 18, num_channels * 8]
 
-    out = tf.reshape(out, [-1, 4 * 4 * num_channels * 8])
+    out = tf.reshape(out, [-1, 18 * 18 * num_channels * 8])
     with tf.variable_scope('fc_1'):
         out = tf.layers.dense(out, num_channels * 8)
         if params.use_batch_norm:
@@ -69,11 +69,11 @@ def model_fn(mode, inputs, params, reuse=False):
     with tf.variable_scope('model', reuse=reuse):
         # Compute the output distribution of the model and the predictions
         logits = build_model(is_training, inputs, params)
-        predictions = tf.argmax(logits, 1)
+        predictions = tf.nn.sigmoid(logits)
 
     # Define loss and accuracy
-    loss = tf.losses.sparse_softmax_cross_entropy(labels=labels, logits=logits)
-    accuracy = tf.reduce_mean(tf.cast(tf.equal(labels, predictions), tf.float32))
+    loss = tf.losses.sigmoid_cross_entropy(multi_class_labels=labels, logits=logits)
+    _, accuracy = tf.metrics.auc(labels=labels, predictions=tf.nn.sigmoid(logits))
 
     # Define training step that minimizes the loss with the Adam optimizer
     if is_training:
@@ -92,7 +92,7 @@ def model_fn(mode, inputs, params, reuse=False):
     # Metrics for evaluation using tf.metrics (average over whole dataset)
     with tf.variable_scope("metrics"):
         metrics = {
-            'accuracy': tf.metrics.accuracy(labels=labels, predictions=tf.argmax(logits, 1)),
+            'accuracy': tf.metrics.auc(labels=labels, predictions=tf.nn.sigmoid(logits)),
             'loss': tf.metrics.mean(loss)
         }
 
@@ -108,15 +108,15 @@ def model_fn(mode, inputs, params, reuse=False):
     tf.summary.scalar('accuracy', accuracy)
     tf.summary.image('train_image', inputs['images'])
 
-    #TODO: if mode == 'eval': ?
-    # Add incorrectly labeled images
-    mask = tf.not_equal(labels, predictions)
-
-    # Add a different summary to know how they were misclassified
-    for label in range(0, params.num_labels):
-        mask_label = tf.logical_and(mask, tf.equal(predictions, label))
-        incorrect_image_label = tf.boolean_mask(inputs['images'], mask_label)
-        tf.summary.image('incorrectly_labeled_{}'.format(label), incorrect_image_label)
+    # #TODO: if mode == 'eval': ?
+    # # Add incorrectly labeled images
+    # mask = tf.not_equal(labels, predictions)
+    #
+    # # Add a different summary to know how they were misclassified
+    # for label in range(0, params.num_labels):
+    #     mask_label = tf.logical_and(mask, tf.equal(predictions, label))
+    #     incorrect_image_label = tf.boolean_mask(inputs['images'], mask_label)
+    #     tf.summary.image('incorrectly_labeled_{}'.format(label), incorrect_image_label)
 
     # -----------------------------------------------------------
     # MODEL SPECIFICATION

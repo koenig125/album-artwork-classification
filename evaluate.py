@@ -45,7 +45,7 @@ if __name__ == '__main__':
     # Get the filenames from the test set
     test_filenames = [os.path.join(test_images_dir, f) for f in os.listdir(test_images_dir) if f.endswith('.jpg')]
 
-    # Labels will be binary vector of size 250 representing all genres
+    # Labels will be binary vector representing all genres
     test_labels = np.load(test_genres_file)
 
     # specify the size of the evaluation set
@@ -58,5 +58,6 @@ if __name__ == '__main__':
     logging.info("Creating the model...")
     model_spec = model_fn('eval', test_inputs, params, reuse=False)
 
+    # Evaluate the model
     logging.info("Starting evaluation")
     evaluate(model_spec, args.model_dir, params, args.restore_from)

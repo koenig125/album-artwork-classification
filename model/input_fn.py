@@ -43,37 +43,34 @@ def train_preprocess(image, label, use_random_flip):
 
 
 def input_fn(is_training, filenames, labels, params):
-    """Input function for the SIGNS dataset.
+    """Input function for the MuMu dataset.
 
-    The filenames have format "{label}_IMG_{id}.jpg".
-    For instance: "data_dir/2_IMG_4584.jpg".
+    The filenames have format "AMAZON_ID.jpg".
+    For instance: "data_dir/1591791065.jpg".
 
     Args:
         is_training: (bool) whether to use the train or test pipeline.
                      At training, we shuffle the data and have multiple epochs
-        filenames: (list) filenames of the images, as ["data_dir/{label}_IMG_{id}.jpg"...]
-        labels: (list) corresponding list of labels
-        params: (Params) contains hyperparameters of the model (ex: `params.num_epochs`)
+        filenames: (list) filenames of the images, as ["data_dir/AMAZON_ID.jpg"...]
+        labels: (list) corresponding list of labels (binary vectors)
+        params: (Params) contains hyperparameters of the model
     """
     num_samples = len(filenames)
     assert len(filenames) == len(labels), "Filenames and labels should have same length"
 
     # Create a Dataset serving batches of images and labels
-    # We don't repeat for multiple epochs because we always train and evaluate for one epoch
     parse_fn = lambda f, l: _parse_function(f, l, params.image_size)
-    train_fn = lambda f, l: train_preprocess(f, l, params.use_random_flip)
 
     if is_training:
         dataset = (tf.data.Dataset.from_tensor_slices((tf.constant(filenames), tf.constant(labels)))
             .shuffle(num_samples)  # whole dataset into the buffer ensures good shuffling
             .map(parse_fn, num_parallel_calls=params.num_parallel_calls)
-            .map(train_fn, num_parallel_calls=params.num_parallel_calls)
             .batch(params.batch_size)
             .prefetch(1)  # make sure you always have one batch ready to serve
         )
     else:
         dataset = (tf.data.Dataset.from_tensor_slices((tf.constant(filenames), tf.constant(labels)))
-            .map(parse_fn)
+            .map(parse_fn, num_parallel_calls=params.num_parallel_calls)
             .batch(params.batch_size)
             .prefetch(1)  # make sure you always have one batch ready to serve
         )

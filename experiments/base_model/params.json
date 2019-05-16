@@ -7,9 +7,9 @@
     "use_batch_norm": true,
     "bn_momentum": 0.9,
 
-    "image_size": 64,
-    "use_random_flip": true,
-    "num_labels": 6,
+    "image_size": 300,
+    "use_random_flip": false,
+    "num_labels": 446,
 
     "num_parallel_calls": 4,
     "save_summary_steps": 1

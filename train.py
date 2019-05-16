@@ -53,7 +53,7 @@ if __name__ == '__main__':
     train_filenames = [os.path.join(train_images_dir, f) for f in os.listdir(train_images_dir) if f.endswith('.jpg')]
     eval_filenames = [os.path.join(dev_images_dir, f) for f in os.listdir(dev_images_dir) if f.endswith('.jpg')]
 
-    # Labels will be binary vector of size 250 representing all genres
+    # Labels will be binary vector representing all genres
     train_labels = np.load(train_genres_file)
     eval_labels = np.load(dev_genres_file)
 

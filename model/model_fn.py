@@ -71,9 +71,8 @@ def model_fn(mode, inputs, params, reuse=False):
         logits = build_model(is_training, inputs, params)
         predictions = tf.nn.sigmoid(logits)
 
-    # Define loss and accuracy
+    # Define loss
     loss = tf.losses.sigmoid_cross_entropy(multi_class_labels=labels, logits=logits)
-    _, accuracy = tf.metrics.auc(labels=labels, predictions=tf.nn.sigmoid(logits))
 
     # Define training step that minimizes the loss with the Adam optimizer
     if is_training:
@@ -92,7 +91,7 @@ def model_fn(mode, inputs, params, reuse=False):
     # Metrics for evaluation using tf.metrics (average over whole dataset)
     with tf.variable_scope("metrics"):
         metrics = {
-            'accuracy': tf.metrics.auc(labels=labels, predictions=tf.nn.sigmoid(logits)),
+            'auroc': tf.metrics.auc(labels=labels, predictions=tf.nn.sigmoid(logits)),
             'loss': tf.metrics.mean(loss)
         }
 
@@ -105,7 +104,7 @@ def model_fn(mode, inputs, params, reuse=False):
 
     # Summaries for training
     tf.summary.scalar('loss', loss)
-    tf.summary.scalar('accuracy', accuracy)
+    tf.summary.scalar('auroc', metrics['auroc'][0])
     tf.summary.image('train_image', inputs['images'])
 
     # #TODO: if mode == 'eval': ?
@@ -126,7 +125,7 @@ def model_fn(mode, inputs, params, reuse=False):
     model_spec['variable_init_op'] = tf.global_variables_initializer()
     model_spec["predictions"] = predictions
     model_spec['loss'] = loss
-    model_spec['accuracy'] = accuracy
+    model_spec['auroc'] = metrics['auroc'][0]
     model_spec['metrics_init_op'] = metrics_init_op
     model_spec['metrics'] = metrics
     model_spec['update_metrics'] = update_metrics_op

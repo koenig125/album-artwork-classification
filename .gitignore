@@ -109,8 +109,13 @@ venv.bak/
 # aws credentials
 *.pem
 
-# data and experiments
-data/
+# jetbrains IDE files
+.idea/
+
+# model data and experiments
+data/*
+!data/amazon_metadata_MuMu.json
+!data/MuMu_dataset_multi-label.csv
 experiments/*/*
 !experiments/*/params.json
 !experiments/*/*/

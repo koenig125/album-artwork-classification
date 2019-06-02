@@ -47,7 +47,7 @@ def build_model(is_training, inputs, params):
     return logits
 
 
-def predict(probs, threshold=0.5):
+def predict(probs, threshold=0.9):
     cast_probs = tf.cast(probs, tf.float32)
     threshold = float(threshold)
     return tf.cast(tf.greater(cast_probs, threshold), tf.int64)
@@ -102,10 +102,10 @@ def model_fn(mode, inputs, params, reuse=False):
             'accuracy_pc': tf.metrics.mean_per_class_accuracy(labels, predictions, params.num_labels),
             'accuracy': tf.metrics.accuracy(labels, predictions),
             'absolute_error': tf.metrics.mean_absolute_error(labels, predictions),
-            'false_negatives': tf.metrics.false_negatives(labels, tf.nn.sigmoid(logits), [0.5]),
-            'false_positives': tf.metrics.false_positives(labels, tf.nn.sigmoid(logits), [0.5]),
-            'true_negatives': tf.metrics.true_negatives(labels, tf.nn.sigmoid(logits), [0.5]),
-            'true_positives': tf.metrics.true_positives(labels, tf.nn.sigmoid(logits), [0.5]),
+            'false_negatives': tf.metrics.false_negatives(labels, tf.nn.sigmoid(logits), [0.9]),
+            'false_positives': tf.metrics.false_positives(labels, tf.nn.sigmoid(logits), [0.9]),
+            'true_negatives': tf.metrics.true_negatives(labels, tf.nn.sigmoid(logits), [0.9]),
+            'true_positives': tf.metrics.true_positives(labels, tf.nn.sigmoid(logits), [0.9]),
             'precision': tf.metrics.precision(labels, predictions),
             'recall': tf.metrics.recall(labels, predictions),
         }

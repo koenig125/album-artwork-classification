@@ -98,14 +98,13 @@ def model_fn(mode, inputs, params, reuse=False):
     with tf.variable_scope("metrics"):
         metrics = {
             'loss': tf.metrics.mean(loss),
+            'accuracy': tf.metrics.accuracy(labels, predictions),
             'auroc': tf.metrics.auc(labels=labels, predictions=tf.nn.sigmoid(logits)),
             'accuracy_pc': tf.metrics.mean_per_class_accuracy(labels, predictions, params.num_labels),
-            'accuracy': tf.metrics.accuracy(labels, predictions),
-            'absolute_error': tf.metrics.mean_absolute_error(labels, predictions),
-            'false_negatives': tf.metrics.false_negatives(labels, tf.nn.sigmoid(logits), [0.9]),
-            'false_positives': tf.metrics.false_positives(labels, tf.nn.sigmoid(logits), [0.9]),
-            'true_negatives': tf.metrics.true_negatives(labels, tf.nn.sigmoid(logits), [0.9]),
-            'true_positives': tf.metrics.true_positives(labels, tf.nn.sigmoid(logits), [0.9]),
+            'false_negatives': tf.metrics.false_negatives_at_thresholds(labels, tf.nn.sigmoid(logits), [0.9]),
+            'false_positives': tf.metrics.false_positives_at_thresholds(labels, tf.nn.sigmoid(logits), [0.9]),
+            'true_negatives': tf.metrics.true_negatives_at_thresholds(labels, tf.nn.sigmoid(logits), [0.9]),
+            'true_positives': tf.metrics.true_positives_at_thresholds(labels, tf.nn.sigmoid(logits), [0.9]),
             'precision': tf.metrics.precision(labels, predictions),
             'recall': tf.metrics.recall(labels, predictions),
         }

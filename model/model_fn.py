@@ -118,10 +118,9 @@ def model_fn(mode, inputs, params, reuse=False):
 
     # Summaries for training
     tf.summary.scalar('loss', loss)
-    tf.summary.scalar('auroc', metrics['auroc'][0])
     tf.summary.scalar('accuracy', metrics['accuracy'][0])
+    tf.summary.scalar('auroc', metrics['auroc'][0])
     tf.summary.scalar('accuracy_pc', metrics['accuracy_pc'][0])
-    tf.summary.scalar('absolute_error', metrics['absolute_error'][0])
     tf.summary.scalar('false_negatives', metrics['false_negatives'][0])
     tf.summary.scalar('false_positives', metrics['false_positives'][0])
     tf.summary.scalar('true_negatives', metrics['true_negatives'][0])

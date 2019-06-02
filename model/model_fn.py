@@ -121,8 +121,6 @@ def model_fn(mode, inputs, params, reuse=False):
     tf.summary.scalar('accuracy', metrics['accuracy'][0])
     tf.summary.scalar('auroc', metrics['auroc'][0])
     tf.summary.scalar('accuracy_pc', metrics['accuracy_pc'][0])
-    tf.summary.scalar('precision', metrics['precision'][0])
-    tf.summary.scalar('recall', metrics['recall'][0])
     tf.summary.image('train_image', inputs['images'])
     tf.summary.tensor_summary('logits', logits)
 

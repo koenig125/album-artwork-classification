@@ -50,8 +50,12 @@ def train_sess(sess, model_spec, num_steps, writer, params):
 
     metrics_values = {k: v[0] for k, v in metrics.items()}
     metrics_val = sess.run(metrics_values)
-    metrics_string = " ; ".join("{}: {:05.3f}".format(k, v) if type(v) is not list else (str(k) + ":" + str(v)) for k, v in metrics_val.items())
-    logging.info("- Train metrics: " + metrics_string)
+    metrics_string = " ; ".join("{}: {:05.3f}".format(k, v) for k, v in metrics_val.items() if k not in
+                                ['false_negatives', 'false_positives', 'true_negatives', 'true_positives'])
+    counts = ' ; '
+    for key in ['false_negatives', 'false_positives', 'true_negatives', 'true_positives']:
+        counts += key + ':' + str(metrics_val[key]) + ' ; '
+    logging.info("- Train metrics: " + metrics_string + counts)
 
 
 def train_and_evaluate(train_model_spec, eval_model_spec, model_dir, params, restore_from=None):

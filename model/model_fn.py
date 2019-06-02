@@ -102,10 +102,10 @@ def model_fn(mode, inputs, params, reuse=False):
             'accuracy_pc': tf.metrics.mean_per_class_accuracy(labels, predictions, params.num_labels),
             'accuracy': tf.metrics.accuracy(labels, predictions),
             'absolute_error': tf.metrics.mean_absolute_error(labels, predictions),
-            'false_negatives': tf.metrics.false_negatives(labels, logits, [0.5]),
-            'false_positives': tf.metrics.false_positives(labels, logits, [0.5]),
-            'true_negatives': tf.metrics.true_negatives(labels, logits, [0.5]),
-            'true_positives': tf.metrics.true_positives(labels, logits, [0.5]),
+            'false_negatives': tf.metrics.false_negatives(labels, tf.nn.sigmoid(logits), [0.5]),
+            'false_positives': tf.metrics.false_positives(labels, tf.nn.sigmoid(logits), [0.5]),
+            'true_negatives': tf.metrics.true_negatives(labels, tf.nn.sigmoid(logits), [0.5]),
+            'true_positives': tf.metrics.true_positives(labels, tf.nn.sigmoid(logits), [0.5]),
             'precision': tf.metrics.precision(labels, predictions),
             'recall': tf.metrics.recall(labels, predictions),
         }
@@ -130,6 +130,7 @@ def model_fn(mode, inputs, params, reuse=False):
     tf.summary.scalar('precision', metrics['precision'][0])
     tf.summary.scalar('recall', metrics['recall'][0])
     tf.summary.image('train_image', inputs['images'])
+    tf.summary.tensor_summary('logits', logits)
 
     # -----------------------------------------------------------
     # MODEL SPECIFICATION

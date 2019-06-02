@@ -101,12 +101,12 @@ def model_fn(mode, inputs, params, reuse=False):
             'accuracy': tf.metrics.accuracy(labels, predictions),
             'auroc': tf.metrics.auc(labels=labels, predictions=tf.nn.sigmoid(logits)),
             'accuracy_pc': tf.metrics.mean_per_class_accuracy(labels, predictions, params.num_labels),
-            'false_negatives': tf.metrics.false_negatives_at_thresholds(labels, tf.nn.sigmoid(logits), [0.9]),
-            'false_positives': tf.metrics.false_positives_at_thresholds(labels, tf.nn.sigmoid(logits), [0.9]),
-            'true_negatives': tf.metrics.true_negatives_at_thresholds(labels, tf.nn.sigmoid(logits), [0.9]),
-            'true_positives': tf.metrics.true_positives_at_thresholds(labels, tf.nn.sigmoid(logits), [0.9]),
-            'precision': tf.metrics.precision(labels, predictions),
-            'recall': tf.metrics.recall(labels, predictions),
+            'false_negatives': tf.metrics.false_negatives_at_thresholds(labels, tf.nn.sigmoid(logits), [0.5, 0.7, 0.9]),
+            'false_positives': tf.metrics.false_positives_at_thresholds(labels, tf.nn.sigmoid(logits), [0.5, 0.7, 0.9]),
+            'true_negatives': tf.metrics.true_negatives_at_thresholds(labels, tf.nn.sigmoid(logits), [0.5, 0.7, 0.9]),
+            'true_positives': tf.metrics.true_positives_at_thresholds(labels, tf.nn.sigmoid(logits), [0.5, 0.7, 0.9]),
+            'precision': tf.metrics.precision_at_thresholds(labels, tf.nn.sigmoid(logits), [0.5, 0.7, 0.9]),
+            'recall': tf.metrics.recall_at_thresholds(labels, tf.nn.sigmoid(logits), [0.5, 0.7, 0.9]),
         }
 
     # Group the update ops for the tf.metrics

@@ -35,9 +35,9 @@ def evaluate_sess(sess, model_spec, num_steps, writer=None, params=None):
     metrics_values = {k: v[0] for k, v in eval_metrics.items()}
     metrics_val = sess.run(metrics_values)
     metrics_string = " ; ".join("{}: {:05.3f}".format(k, v) for k, v in metrics_val.items() if k not in
-                                ['false_negatives', 'false_positives', 'true_negatives', 'true_positives'])
+                                ['false_negatives', 'false_positives', 'true_negatives', 'true_positives', 'precision', 'recall'])
     counts = ' ; '
-    for key in ['false_negatives', 'false_positives', 'true_negatives', 'true_positives']:
+    for key in ['false_negatives', 'false_positives', 'true_negatives', 'true_positives', 'precision', 'recall']:
         counts += key + ':' + str(metrics_val[key]) + ' ; '
     logging.info("- Eval metrics: " + metrics_string + counts)
 

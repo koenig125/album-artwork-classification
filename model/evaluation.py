@@ -45,8 +45,9 @@ def evaluate_sess(sess, model_spec, num_steps, writer=None, params=None):
     if writer is not None:
         global_step_val = sess.run(global_step)
         for tag, val in metrics_val.items():
-            summ = tf.Summary(value=[tf.Summary.Value(tag=tag, simple_value=val)])
-            writer.add_summary(summ, global_step_val)
+            if tag not in ['false_negatives', 'false_positives', 'true_negatives', 'true_positives', 'precision', 'recall']:
+                summ = tf.Summary(value=[tf.Summary.Value(tag=tag, simple_value=val)])
+                writer.add_summary(summ, global_step_val)
 
     return metrics_val
 

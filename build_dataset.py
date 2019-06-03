@@ -92,7 +92,10 @@ def get_album_genres(f_genres):
 
 def generate_labels(filenames, album_genres, output_dir, split):
     """Convert genres for each album to binary vector label and save to `output_dir`"""
-    genre_list = list(set([genre for genres in album_genres.values() for genre in genres]))
+    # genre_list = list(set([genre for genres in album_genres.values() for genre in genres]))
+    genre_list = ['Rock', 'Alternative Rock', 'World Music', 'Dance & Electronic', 'Jazz', 'R&B',
+		'Metal', 'Folk', 'Hardcore & Punk', 'Blues', 'Country', 'Latin Music', 'Reggae',
+		'Rap & Hip-Hop', 'Oldies', 'Christian', 'Gospel', 'New Age', 'Classical']
     genre_list.sort()
     labels = []
     for f in filenames:

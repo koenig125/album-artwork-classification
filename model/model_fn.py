@@ -79,7 +79,7 @@ def model_fn(mode, inputs, params, reuse=False):
 
     # Define loss
     # loss = tf.losses.sigmoid_cross_entropy(multi_class_labels=labels, logits=logits)
-    loss = tf.reduce_mean(tf.nn.weighted_cross_entropy_with_logits(targets=tf.cast(labels, tf.float32), logits=logits, pos_weight=10))
+    loss = tf.reduce_mean(tf.nn.weighted_cross_entropy_with_logits(targets=tf.cast(labels, tf.float32), logits=logits, pos_weight=5))
 
     # Define training step that minimizes the loss with the Adam optimizer
     if is_training:
@@ -99,15 +99,14 @@ def model_fn(mode, inputs, params, reuse=False):
     with tf.variable_scope("metrics"):
         metrics = {
             'loss': tf.metrics.mean(loss),
-            'accuracy': tf.metrics.accuracy(labels, predictions),
-            'auroc': tf.metrics.auc(labels=labels, predictions=tf.nn.sigmoid(logits)),
             'accuracy_pc': tf.metrics.mean_per_class_accuracy(labels, predictions, params.num_labels),
-            'false_negatives': tf.metrics.false_negatives_at_thresholds(labels, tf.nn.sigmoid(logits), [0.5, 0.7, 0.9]),
-            'false_positives': tf.metrics.false_positives_at_thresholds(labels, tf.nn.sigmoid(logits), [0.5, 0.7, 0.9]),
-            'true_negatives': tf.metrics.true_negatives_at_thresholds(labels, tf.nn.sigmoid(logits), [0.5, 0.7, 0.9]),
-            'true_positives': tf.metrics.true_positives_at_thresholds(labels, tf.nn.sigmoid(logits), [0.5, 0.7, 0.9]),
-            'precision': tf.metrics.precision_at_thresholds(labels, tf.nn.sigmoid(logits), [0.5, 0.7, 0.9]),
-            'recall': tf.metrics.recall_at_thresholds(labels, tf.nn.sigmoid(logits), [0.5, 0.7, 0.9]),
+            'auroc_pr': tf.metrics.auc(labels=labels, predictions=tf.nn.sigmoid(logits), curve='PR'),
+            'precision': tf.metrics.precision_at_thresholds(labels, tf.nn.sigmoid(logits), [0.3, 0.5, 0.7, 0.9]),
+            'recall': tf.metrics.recall_at_thresholds(labels, tf.nn.sigmoid(logits), [0.3, 0.5, 0.7, 0.9]),
+            'true_positives': tf.metrics.true_positives_at_thresholds(labels, tf.nn.sigmoid(logits), [0.3, 0.5, 0.7, 0.9]),
+            'false_negatives': tf.metrics.false_negatives_at_thresholds(labels, tf.nn.sigmoid(logits), [0.3, 0.5, 0.7, 0.9]),
+            'false_positives': tf.metrics.false_positives_at_thresholds(labels, tf.nn.sigmoid(logits), [0.3, 0.5, 0.7, 0.9]),
+            'true_negatives': tf.metrics.true_negatives_at_thresholds(labels, tf.nn.sigmoid(logits), [0.3, 0.5, 0.7, 0.9]),
         }
 
     # Group the update ops for the tf.metrics
@@ -119,11 +118,8 @@ def model_fn(mode, inputs, params, reuse=False):
 
     # Summaries for training
     tf.summary.scalar('loss', loss)
-    tf.summary.scalar('accuracy', metrics['accuracy'][0])
-    tf.summary.scalar('auroc', metrics['auroc'][0])
-    tf.summary.scalar('accuracy_pc', metrics['accuracy_pc'][0])
+    tf.summary.scalar('auroc_pr', metrics['auroc_pr'][0])
     tf.summary.image('train_image', inputs['images'])
-    tf.summary.tensor_summary('logits', logits)
 
     # -----------------------------------------------------------
     # MODEL SPECIFICATION
@@ -133,7 +129,7 @@ def model_fn(mode, inputs, params, reuse=False):
     model_spec['variable_init_op'] = tf.global_variables_initializer()
     model_spec["predictions"] = predictions
     model_spec['loss'] = loss
-    model_spec['auroc'] = metrics['auroc'][0]
+    model_spec['auroc_pr'] = metrics['auroc_pr'][0]
     model_spec['metrics_init_op'] = metrics_init_op
     model_spec['metrics'] = metrics
     model_spec['update_metrics'] = update_metrics_op

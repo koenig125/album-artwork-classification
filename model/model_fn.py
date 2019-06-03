@@ -24,7 +24,7 @@ def build_model(is_training, inputs, params):
     # For each block, we do: 3x3 conv -> batch norm -> relu -> 2x2 maxpool
     num_channels = params.num_channels
     bn_momentum = params.bn_momentum
-    channels = [num_channels, num_channels * 2, num_channels * 4, num_channels * 8]
+    channels = [num_channels, num_channels * 2, num_channels * 4, num_channels * 8, num_channels * 8]
     for i, c in enumerate(channels):
         with tf.variable_scope('block_{}'.format(i+1)):
             out = tf.layers.conv2d(out, c, 3, padding='same')
@@ -33,9 +33,9 @@ def build_model(is_training, inputs, params):
             out = tf.nn.relu(out)
             out = tf.layers.max_pooling2d(out, 2, 2)
 
-    assert out.get_shape().as_list() == [None, 18, 18, num_channels * 8]
+    assert out.get_shape().as_list() == [None, 9, 9, num_channels * 8]
 
-    out = tf.reshape(out, [-1, 18 * 18 * num_channels * 8])
+    out = tf.reshape(out, [-1, 9 * 9 * num_channels * 8])
     with tf.variable_scope('fc_1'):
         out = tf.layers.dense(out, num_channels * 8)
         if params.use_batch_norm:

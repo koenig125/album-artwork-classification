@@ -100,7 +100,7 @@ def model_fn(mode, inputs, params, reuse=False):
         metrics = {
             'loss': tf.metrics.mean(loss),
             'accuracy_pc': tf.metrics.mean_per_class_accuracy(labels, predictions, params.num_labels),
-            'auroc_pr': tf.metrics.auc(labels=labels, predictions=tf.nn.sigmoid(logits), curve='PR'),
+            'auroc_pr': tf.metrics.auc(labels=labels, predictions=tf.nn.sigmoid(logits), curve='PR', summation_method='careful_interpolation'),
             'precision': tf.metrics.precision_at_thresholds(labels, tf.nn.sigmoid(logits), [0.3, 0.5, 0.7, 0.9]),
             'recall': tf.metrics.recall_at_thresholds(labels, tf.nn.sigmoid(logits), [0.3, 0.5, 0.7, 0.9]),
             'true_positives': tf.metrics.true_positives_at_thresholds(labels, tf.nn.sigmoid(logits), [0.3, 0.5, 0.7, 0.9]),

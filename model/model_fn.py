@@ -78,8 +78,8 @@ def model_fn(mode, inputs, params, reuse=False):
         predictions = predict(tf.nn.sigmoid(logits))
 
     # Define loss
-    # loss = tf.losses.sigmoid_cross_entropy(multi_class_labels=labels, logits=logits)
-    loss = tf.reduce_mean(tf.nn.weighted_cross_entropy_with_logits(targets=tf.cast(labels, tf.float32), logits=logits, pos_weight=5))
+    loss = tf.losses.sigmoid_cross_entropy(multi_class_labels=labels, logits=logits)
+    # loss = tf.reduce_mean(tf.nn.weighted_cross_entropy_with_logits(targets=tf.cast(labels, tf.float32), logits=logits, pos_weight=5))
 
     # Define training step that minimizes the loss with the Adam optimizer
     if is_training:

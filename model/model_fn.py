@@ -1,6 +1,7 @@
 """Define the model."""
 
 import tensorflow as tf
+import logging
 
 
 def build_model(is_training, inputs, params):
@@ -33,7 +34,7 @@ def build_model(is_training, inputs, params):
             out = tf.nn.relu(out)
             out = tf.layers.max_pooling2d(out, 2, 2)
 
-    np = params.image_size / (2 ** len(channels)) # number "pixels" wide
+    np = int(params.image_size / (2 ** len(channels))) # num "pixels" wide
     assert out.get_shape().as_list() == [None, np, np, num_channels * 8]
 
     out = tf.reshape(out, [-1, np * np * num_channels * 8])
@@ -76,6 +77,7 @@ def model_fn(mode, inputs, params, reuse=False):
         # Compute the output distribution of the model and the predictions
         logits = build_model(is_training, inputs, params)
         predictions = tf.nn.sigmoid(logits)
+        logging.info('Predictions: ', predictions)
 
     # Define loss
     loss = tf.losses.sigmoid_cross_entropy(multi_class_labels=labels, logits=logits)

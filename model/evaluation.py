@@ -3,7 +3,6 @@
 import logging
 import os
 
-from tqdm import trange
 import tensorflow as tf
 
 from model.utils import save_dict_to_json

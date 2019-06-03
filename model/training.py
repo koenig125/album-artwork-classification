@@ -90,7 +90,7 @@ def train_and_evaluate(train_model_spec, eval_model_spec, model_dir, params, res
         train_writer = tf.summary.FileWriter(os.path.join(model_dir, 'train_summaries'), sess.graph)
         eval_writer = tf.summary.FileWriter(os.path.join(model_dir, 'eval_summaries'), sess.graph)
 
-        best_eval_auroc = 0.0
+        best_eval_auprc = 0.0
         for epoch in range(begin_at_epoch, begin_at_epoch + params.num_epochs):
             # Run one epoch
             logging.info("Epoch {}/{}".format(epoch + 1, begin_at_epoch + params.num_epochs))
@@ -106,18 +106,18 @@ def train_and_evaluate(train_model_spec, eval_model_spec, model_dir, params, res
             num_steps = (params.eval_size + params.batch_size - 1) // params.batch_size
             metrics = evaluate_sess(sess, eval_model_spec, num_steps, eval_writer)
 
-            # # If best_eval, best_save_path
-            # eval_auroc = metrics['auroc']
-            # if eval_auroc >= best_eval_auroc:
-            #     # Store new best auroc
-            #     best_eval_auroc = eval_auroc
-            #     # Save weights
-            #     best_save_path = os.path.join(model_dir, 'best_weights', 'after-epoch')
-            #     best_save_path = best_saver.save(sess, best_save_path, global_step=epoch + 1)
-            #     logging.info("- Found new best auroc, saving in {}".format(best_save_path))
-            #     # Save best eval metrics in a json file in the model directory
-            #     best_json_path = os.path.join(model_dir, "metrics_eval_best_weights.json")
-            #     save_dict_to_json(metrics, best_json_path)
+            # If best_eval, best_save_path
+            eval_auprc = metrics['auprc']
+            if eval_auprc >= best_eval_auprc:
+                # Store new best auroc
+                best_eval_auprc = eval_auprc
+                # Save weights
+                best_save_path = os.path.join(model_dir, 'best_weights', 'after-epoch')
+                best_save_path = best_saver.save(sess, best_save_path, global_step=epoch + 1)
+                logging.info("- Found new best auroc, saving in {}".format(best_save_path))
+                # # Save best eval metrics in a json file in the model directory
+                # best_json_path = os.path.join(model_dir, "metrics_eval_best_weights.json")
+                # save_dict_to_json(metrics, best_json_path)
 
             # # Save latest eval metrics in a json file in the model directory
             # last_json_path = os.path.join(model_dir, "metrics_eval_last_weights.json")

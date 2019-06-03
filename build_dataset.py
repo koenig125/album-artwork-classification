@@ -1,11 +1,10 @@
-"""Split the MUMU dataset into train/dev/test and resize images to 300x300.
+"""Split the MUMU dataset into train/dev/test sets.
 
 The MuMu dataset comes in the following format:
     AMAZON_ID.jpg
     ...
 
-Original images have various sizes at or below (300, 300). Images below (300, 300) resolution are
-resized to (300, 300) in order to ensure consistent input to network and full analysis of image details.
+Original images have various sizes at or below (300, 300).
 """
 
 import argparse
@@ -18,8 +17,6 @@ import urllib.request as req
 import numpy as np
 from PIL import Image
 from tqdm import tqdm
-
-SIZE = 300
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--data_dir', default='data/MUMU',
@@ -107,11 +104,10 @@ def generate_labels(filenames, album_genres, output_dir, split):
     np.save(output_file, np.array(labels))
 
 
-def resize_and_save(filenames, output_dir, size=SIZE):
-    """Resize the image contained in `filename` and save it to the `output_dir`"""
+def save(filenames, output_dir):
+    """Save the images contained in `filenames` to the `output_dir`"""
     for filename in tqdm(filenames):
         image = Image.open(filename)
-        image = image.resize((size, size), Image.BILINEAR)
         image.save(os.path.join(output_dir, filename.split('/')[-1]))
 
 
@@ -144,7 +140,7 @@ if __name__ == '__main__':
         create_dir(output_dir_genres)
 
         print("Processing {} data, saving to {}".format(split, output_dir_images))
-        resize_and_save(files, output_dir_images, size=SIZE)
+        save(files, output_dir_images)
 
         print("Generating {} labels, saving to {}".format(split, output_dir_genres))
         generate_labels(files, album_genres, output_dir_genres, split)

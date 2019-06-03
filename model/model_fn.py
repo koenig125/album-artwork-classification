@@ -1,7 +1,6 @@
 """Define the model."""
 
 import tensorflow as tf
-import logging
 
 
 def build_model(is_training, inputs, params):
@@ -77,7 +76,6 @@ def model_fn(mode, inputs, params, reuse=False):
         # Compute the output distribution of the model and the predictions
         logits = build_model(is_training, inputs, params)
         predictions = tf.nn.sigmoid(logits)
-        logging.info('Predictions: ', predictions)
 
     # Define loss
     loss = tf.losses.sigmoid_cross_entropy(multi_class_labels=labels, logits=logits)

@@ -79,7 +79,7 @@ def model_fn(mode, inputs, params, reuse=False):
 
     # Define loss
     # loss = tf.losses.sigmoid_cross_entropy(multi_class_labels=labels, logits=logits)
-    loss = tf.reduce_mean(tf.nn.weighted_cross_entropy_with_logits(targets=labels, logits=logits, pos_weight=2))
+    loss = tf.reduce_mean(tf.nn.weighted_cross_entropy_with_logits(targets=tf.cast(labels, tf.float32), logits=logits, pos_weight=2))
 
     # Define training step that minimizes the loss with the Adam optimizer
     if is_training:

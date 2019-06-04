@@ -62,7 +62,7 @@ if __name__ == "__main__":
             job_name = "learning_rate_{}".format(learning_rate)
             launch_training_job(args.parent_dir, args.data_dir, job_name, params)
     elif args.param == 'regularization_rate':
-        regularization_rates = [.0001, .001, .01, .1, 1]
+        regularization_rates = [.0001, .001, .01, .1, 1.0]
         for regularization_rate in regularization_rates:
             params.regularization_rate = regularization_rate
             job_name = "regularization_rate_{}".format(regularization_rate)

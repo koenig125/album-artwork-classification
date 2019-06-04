@@ -24,13 +24,17 @@ def build_model(is_training, inputs, params):
     # For each block, we do: 3x3 conv -> batch norm -> relu -> 2x2 maxpool
     num_channels = params.num_channels
     bn_momentum = params.bn_momentum
+    dropout_rate = params.dropout_rate
+    regularizer = tf.contrib.layers.l2_regularizer(scale=params.regularization_rate)
     channels = [num_channels, num_channels * 2, num_channels * 4, num_channels * 8, num_channels * 8]
     for i, c in enumerate(channels):
         with tf.variable_scope('block_{}'.format(i+1)):
-            out = tf.layers.conv2d(out, c, 3, padding='same')
+            out = tf.layers.conv2d(out, c, 3, padding='same', kernel_regularizer=regularizer)
             if params.use_batch_norm:
                 out = tf.layers.batch_normalization(out, momentum=bn_momentum, training=is_training)
             out = tf.nn.relu(out)
+            if params.use_dropout:
+                out = tf.layers.dropout(out, rate=dropout_rate, training=is_training)
             out = tf.layers.max_pooling2d(out, 2, 2)
 
     np = int(params.image_size / (2 ** len(channels))) # num "pixels" wide
@@ -38,17 +42,21 @@ def build_model(is_training, inputs, params):
 
     out = tf.reshape(out, [-1, np * np * num_channels * 8])
     with tf.variable_scope('fc_1'):
-        out = tf.layers.dense(out, num_channels * 8)
+        out = tf.layers.dense(out, num_channels * 8, kernel_regularizer=regularizer)
         if params.use_batch_norm:
             out = tf.layers.batch_normalization(out, momentum=bn_momentum, training=is_training)
         out = tf.nn.relu(out)
+        if params.use_dropout:
+            out = tf.layers.dropout(out, rate=dropout_rate, training=is_training)
     with tf.variable_scope('fc_2'):
-        out = tf.layers.dense(out, num_channels * 8)
+        out = tf.layers.dense(out, num_channels * 8, kernel_regularizer=regularizer)
         if params.use_batch_norm:
             out = tf.layers.batch_normalization(out, momentum=bn_momentum, training=is_training)
         out = tf.nn.relu(out)
+        if params.use_dropout:
+            out = tf.layers.dropout(out, rate=dropout_rate, training=is_training)
     with tf.variable_scope('fc_3'):
-        logits = tf.layers.dense(out, params.num_labels)
+        logits = tf.layers.dense(out, params.num_labels, kernel_regularizer=regularizer)
 
     return logits
 
@@ -84,7 +92,7 @@ def model_fn(mode, inputs, params, reuse=False):
         predictions = predict(tf.nn.sigmoid(logits))
 
     # Define loss
-    loss = tf.losses.sigmoid_cross_entropy(multi_class_labels=labels, logits=logits)
+    loss = tf.losses.sigmoid_cross_entropy(multi_class_labels=labels, logits=logits) + tf.losses.get_regularization_loss()
 
     # Define training step that minimizes the loss with the Adam optimizer
     if is_training:

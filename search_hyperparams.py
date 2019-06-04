@@ -61,3 +61,15 @@ if __name__ == "__main__":
             params.learning_rate = learning_rate
             job_name = "learning_rate_{}".format(learning_rate)
             launch_training_job(args.parent_dir, args.data_dir, job_name, params)
+    elif args.param == 'regularization_rate':
+        regularization_rates = [.0001, .001, .01, .1, 1]
+        for regularization_rate in regularization_rates:
+            params.regularization_rate = regularization_rate
+            job_name = "regularization_rate_{}".format(regularization_rate)
+            launch_training_job(args.parent_dir, args.data_dir, job_name, params)
+    elif args.param == 'dropout_rate':
+        dropout_rates = [.1, .2, .5]
+        for dropout_rate in dropout_rates:
+            params.dropout_rate = dropout_rate
+            job_name = "dropout_rate_{}".format(dropout_rate)
+            launch_training_job(args.parent_dir, args.data_dir, job_name, params)

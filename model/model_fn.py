@@ -53,6 +53,12 @@ def build_model(is_training, inputs, params):
     return logits
 
 
+def predict(probs, threshold=0.5):
+    cast_probs = tf.cast(probs, tf.float32)
+    threshold = float(threshold)
+    return tf.cast(tf.greater(cast_probs, threshold), tf.int64)
+
+
 def model_fn(mode, inputs, params, reuse=False):
     """Model function defining the graph operations.
 
@@ -75,7 +81,7 @@ def model_fn(mode, inputs, params, reuse=False):
     with tf.variable_scope('model', reuse=reuse):
         # Compute the output distribution of the model and the predictions
         logits = build_model(is_training, inputs, params)
-        predictions = tf.nn.sigmoid(logits)
+        predictions = predict(tf.nn.sigmoid(logits))
 
     # Define loss
     loss = tf.losses.sigmoid_cross_entropy(multi_class_labels=labels, logits=logits)
@@ -91,20 +97,16 @@ def model_fn(mode, inputs, params, reuse=False):
         else:
             train_op = optimizer.minimize(loss, global_step=global_step)
 
-
     # -----------------------------------------------------------
     # METRICS AND SUMMARIES
     # Metrics for evaluation using tf.metrics (average over whole dataset)
     with tf.variable_scope("metrics"):
         metrics = {
             'loss': tf.metrics.mean(loss),
-            'auprc': tf.metrics.auc(labels=labels, predictions=tf.nn.sigmoid(logits), curve='PR', summation_method='careful_interpolation'),
-            'precision': tf.metrics.precision_at_thresholds(labels, tf.nn.sigmoid(logits), [0.3, 0.5, 0.7, 0.9]),
-            'recall': tf.metrics.recall_at_thresholds(labels, tf.nn.sigmoid(logits), [0.3, 0.5, 0.7, 0.9]),
-            'true_positives': tf.metrics.true_positives_at_thresholds(labels, tf.nn.sigmoid(logits), [0.3, 0.5, 0.7, 0.9]),
-            'false_negatives': tf.metrics.false_negatives_at_thresholds(labels, tf.nn.sigmoid(logits), [0.3, 0.5, 0.7, 0.9]),
-            'false_positives': tf.metrics.false_positives_at_thresholds(labels, tf.nn.sigmoid(logits), [0.3, 0.5, 0.7, 0.9]),
-            'true_negatives': tf.metrics.true_negatives_at_thresholds(labels, tf.nn.sigmoid(logits), [0.3, 0.5, 0.7, 0.9]),
+            'auprc': tf.metrics.auc(labels=labels, predictions=tf.nn.sigmoid(logits),
+                                    curve='PR', summation_method='careful_interpolation'),
+            'precision': tf.metrics.precision_at_thresholds(labels, predict(tf.nn.sigmoid(logits))),
+            'recall': tf.metrics.recall_at_thresholds(labels, predict(tf.nn.sigmoid(logits))),
         }
 
     # Group the update ops for the tf.metrics
@@ -117,7 +119,8 @@ def model_fn(mode, inputs, params, reuse=False):
     # Summaries for training
     tf.summary.scalar('loss', loss)
     tf.summary.scalar('auprc', metrics['auprc'][0])
-    tf.summary.image('train_image', inputs['images'])
+    tf.summary.scalar('precision', metrics['precision'][0])
+    tf.summary.scalar('recall', metrics['recall'][0])
 
     # -----------------------------------------------------------
     # MODEL SPECIFICATION

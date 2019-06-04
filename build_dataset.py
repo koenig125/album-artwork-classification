@@ -12,6 +12,7 @@ import json
 import csv
 import random
 import os
+import shutil
 
 import urllib.request as req
 import numpy as np
@@ -35,6 +36,13 @@ def create_dir(dir_name):
         os.mkdir(dir_name)
     else:
         print("Warning: dir {} already exists".format(dir_name))
+
+
+def create_with_overwrite(dir_name):
+    """Create new directory or overwrite existing dir if it exists."""
+    if os.path.exists(dir_name):
+        shutil.rmtree(dir_name)
+    os.mkdir(dir_name)
 
 
 def get_image_urls(mumu_metadata):
@@ -89,10 +97,7 @@ def get_album_genres(f_genres):
 
 def generate_labels(filenames, album_genres, output_dir, split):
     """Convert genres for each album to binary vector label and save to `output_dir`"""
-    # genre_list = list(set([genre for genres in album_genres.values() for genre in genres]))
-    genre_list = ['Rock', 'Alternative Rock', 'World Music', 'Dance & Electronic', 'Jazz', 'R&B',
-		'Metal', 'Folk', 'Hardcore & Punk', 'Blues', 'Country', 'Latin Music', 'Reggae',
-		'Rap & Hip-Hop', 'Oldies', 'Christian', 'Gospel', 'New Age', 'Classical']
+    genre_list = list(set([genre for genres in album_genres.values() for genre in genres]))
     genre_list.sort()
     labels = []
     files = []
@@ -100,7 +105,9 @@ def generate_labels(filenames, album_genres, output_dir, split):
         img_id = f.split('/')[-1][:-4]
         genres = album_genres[img_id]
         album_label = [1 if g in genres else 0 for g in genre_list]
-        if 1 not in album_label: continue
+        if 1 not in album_label:
+            print(album_label)
+            print(genres)
         labels.append(album_label)
         files.append(f)
     output_file = os.path.join(output_dir, 'y_' + split + '.npy')
@@ -137,11 +144,11 @@ if __name__ == '__main__':
     album_genres = get_album_genres(args.data_labels)
     for split, files in splits.items():
         dir_split = os.path.join(args.output_dir, split)
-        create_dir(dir_split)
+        create_with_overwrite(dir_split)
         output_dir_images = os.path.join(dir_split, 'images')
-        create_dir(output_dir_images)
+        create_with_overwrite(output_dir_images)
         output_dir_genres = os.path.join(dir_split, 'genres')
-        create_dir(output_dir_genres)
+        create_with_overwrite(output_dir_genres)
 
         print("Generating {} labels, saving to {}".format(split, output_dir_genres))
         files_present = generate_labels(files, album_genres, output_dir_genres, split)

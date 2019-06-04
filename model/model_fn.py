@@ -26,36 +26,41 @@ def build_model(is_training, inputs, params):
     bn_momentum = params.bn_momentum
     dropout_rate = params.dropout_rate
     regularizer = tf.contrib.layers.l2_regularizer(scale=params.regularization_rate)
-    channels = [num_channels, num_channels * 2, num_channels * 4, num_channels * 8, num_channels * 8]
+    channels = [num_channels, num_channels * 2, num_channels * 4, num_channels * 8, num_channels * 16, num_channels * 32]
     for i, c in enumerate(channels):
         with tf.variable_scope('block_{}'.format(i+1)):
             out = tf.layers.conv2d(out, c, 3, padding='same', kernel_regularizer=regularizer)
             if params.use_batch_norm:
                 out = tf.layers.batch_normalization(out, momentum=bn_momentum, training=is_training)
             out = tf.nn.relu(out)
-            if params.use_dropout:
-                out = tf.layers.dropout(out, rate=dropout_rate, training=is_training)
             out = tf.layers.max_pooling2d(out, 2, 2)
 
     np = int(params.image_size / (2 ** len(channels))) # num "pixels" wide
-    assert out.get_shape().as_list() == [None, np, np, num_channels * 8]
+    assert out.get_shape().as_list() == [None, np, np, num_channels * 32]
 
-    out = tf.reshape(out, [-1, np * np * num_channels * 8])
+    out = tf.reshape(out, [-1, np * np * num_channels * 32])
     with tf.variable_scope('fc_1'):
-        out = tf.layers.dense(out, num_channels * 8, kernel_regularizer=regularizer)
+        out = tf.layers.dense(out, num_channels * 32, kernel_regularizer=regularizer)
         if params.use_batch_norm:
             out = tf.layers.batch_normalization(out, momentum=bn_momentum, training=is_training)
         out = tf.nn.relu(out)
         if params.use_dropout:
             out = tf.layers.dropout(out, rate=dropout_rate, training=is_training)
     with tf.variable_scope('fc_2'):
-        out = tf.layers.dense(out, num_channels * 8, kernel_regularizer=regularizer)
+        out = tf.layers.dense(out, num_channels * 32, kernel_regularizer=regularizer)
         if params.use_batch_norm:
             out = tf.layers.batch_normalization(out, momentum=bn_momentum, training=is_training)
         out = tf.nn.relu(out)
         if params.use_dropout:
             out = tf.layers.dropout(out, rate=dropout_rate, training=is_training)
     with tf.variable_scope('fc_3'):
+        out = tf.layers.dense(out, num_channels * 32, kernel_regularizer=regularizer)
+        if params.use_batch_norm:
+            out = tf.layers.batch_normalization(out, momentum=bn_momentum, training=is_training)
+        out = tf.nn.relu(out)
+        if params.use_dropout:
+            out = tf.layers.dropout(out, rate=dropout_rate, training=is_training)
+    with tf.variable_scope('fc_4'):
         logits = tf.layers.dense(out, params.num_labels, kernel_regularizer=regularizer)
 
     return logits
@@ -115,8 +120,10 @@ def model_fn(mode, inputs, params, reuse=False):
                                     curve='PR', summation_method='careful_interpolation'),
             'auroc': tf.metrics.auc(labels=labels, predictions=tf.nn.sigmoid(logits),
                                     curve='ROC', summation_method='trapezoidal'),
-            'precision': tf.metrics.precision(labels, predict(tf.nn.sigmoid(logits))),
-            'recall': tf.metrics.recall(labels, predict(tf.nn.sigmoid(logits))),
+            'precision_thresh_.5': tf.metrics.precision(labels, predict(tf.nn.sigmoid(logits))),
+            'recall_thresh_.5': tf.metrics.recall(labels, predict(tf.nn.sigmoid(logits))),
+            'pr_curve': tf.contrib.metrics.streaming_curve_points(labels=labels, predictions=tf.nn.sigmoid(logits),
+                                                                  curve='PR'),
         }
 
     # Group the update ops for the tf.metrics
@@ -130,8 +137,9 @@ def model_fn(mode, inputs, params, reuse=False):
     tf.summary.scalar('loss', loss)
     tf.summary.scalar('auprc', metrics['auprc'][0])
     tf.summary.scalar('auroc', metrics['auroc'][0])
-    tf.summary.scalar('precision', metrics['precision'][0])
-    tf.summary.scalar('recall', metrics['recall'][0])
+    tf.summary.scalar('precision_thresh_.5', metrics['precision_thresh_.5'][0])
+    tf.summary.scalar('recall_thresh_.5', metrics['recall_thresh_.5'][0])
+    tf.summary.tensor_summary('pr_curve', metrics['pr_curve'][0])
 
     # -----------------------------------------------------------
     # MODEL SPECIFICATION

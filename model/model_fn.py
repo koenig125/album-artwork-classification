@@ -105,8 +105,8 @@ def model_fn(mode, inputs, params, reuse=False):
             'loss': tf.metrics.mean(loss),
             'auprc': tf.metrics.auc(labels=labels, predictions=tf.nn.sigmoid(logits),
                                     curve='PR', summation_method='careful_interpolation'),
-            'precision': tf.metrics.precision_at_thresholds(labels, predict(tf.nn.sigmoid(logits))),
-            'recall': tf.metrics.recall_at_thresholds(labels, predict(tf.nn.sigmoid(logits))),
+            'precision': tf.metrics.precision(labels, predict(tf.nn.sigmoid(logits))),
+            'recall': tf.metrics.recall(labels, predict(tf.nn.sigmoid(logits))),
         }
 
     # Group the update ops for the tf.metrics

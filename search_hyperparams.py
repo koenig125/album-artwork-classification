@@ -47,12 +47,15 @@ if __name__ == "__main__":
     params = Params(json_path)
 
     # Perform hypersearch over one parameter
-    learning_rates = [1e-4, 1e-3, 1e-2]
-
-    for learning_rate in learning_rates:
-        # Modify the relevant parameter in params
-        params.learning_rate = learning_rate
-
-        # Launch job (name has to be unique)
-        job_name = "learning_rate_{}".format(learning_rate)
-        launch_training_job(args.parent_dir, args.data_dir, job_name, params)
+    if args.param == 'channel':
+        channels = [4, 16, 64]
+        for channel in channels:
+            params.num_channels = channel
+            job_name = "channel_{}".format(channel)
+            launch_training_job(args.parent_dir, args.data_dir, job_name, params)
+    elif args.param == 'learning_rate':
+        learning_rates = [1e-5, 1e-4, 1e-3]
+        for learning_rate in learning_rates:
+            params.learning_rate = learning_rate
+            job_name = "learning_rate_{}".format(learning_rate)
+            launch_training_job(args.parent_dir, args.data_dir, job_name, params)

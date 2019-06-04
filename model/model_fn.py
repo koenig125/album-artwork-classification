@@ -105,6 +105,8 @@ def model_fn(mode, inputs, params, reuse=False):
             'loss': tf.metrics.mean(loss),
             'auprc': tf.metrics.auc(labels=labels, predictions=tf.nn.sigmoid(logits),
                                     curve='PR', summation_method='careful_interpolation'),
+            'auroc': tf.metrics.auc(labels=labels, predictions=tf.nn.sigmoid(logits),
+                                    curve='ROC', ssummation_method='trapezoidal'),
             'precision': tf.metrics.precision(labels, predict(tf.nn.sigmoid(logits))),
             'recall': tf.metrics.recall(labels, predict(tf.nn.sigmoid(logits))),
         }
@@ -119,6 +121,7 @@ def model_fn(mode, inputs, params, reuse=False):
     # Summaries for training
     tf.summary.scalar('loss', loss)
     tf.summary.scalar('auprc', metrics['auprc'][0])
+    tf.summary.scalar('auroc', metrics['auroc'][0])
     tf.summary.scalar('precision', metrics['precision'][0])
     tf.summary.scalar('recall', metrics['recall'][0])
 

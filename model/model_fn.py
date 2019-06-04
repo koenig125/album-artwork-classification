@@ -106,7 +106,7 @@ def model_fn(mode, inputs, params, reuse=False):
             'auprc': tf.metrics.auc(labels=labels, predictions=tf.nn.sigmoid(logits),
                                     curve='PR', summation_method='careful_interpolation'),
             'auroc': tf.metrics.auc(labels=labels, predictions=tf.nn.sigmoid(logits),
-                                    curve='ROC', ssummation_method='trapezoidal'),
+                                    curve='ROC', summation_method='trapezoidal'),
             'precision': tf.metrics.precision(labels, predict(tf.nn.sigmoid(logits))),
             'recall': tf.metrics.recall(labels, predict(tf.nn.sigmoid(logits))),
         }

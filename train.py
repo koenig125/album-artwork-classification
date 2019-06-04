@@ -61,6 +61,11 @@ if __name__ == '__main__':
     params.train_size = len(train_filenames)
     params.eval_size = len(eval_filenames)
 
+    print(len(train_filenames))
+    print(len(train_labels))
+    print(len(eval_filenames))
+    print(len(eval_labels))
+
     # Create the two iterators over the two datasets
     train_inputs = input_fn(True, train_filenames, train_labels, params)
     eval_inputs = input_fn(False, eval_filenames, eval_labels, params)

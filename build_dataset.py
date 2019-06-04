@@ -95,13 +95,17 @@ def generate_labels(filenames, album_genres, output_dir, split):
 		'Rap & Hip-Hop', 'Oldies', 'Christian', 'Gospel', 'New Age', 'Classical']
     genre_list.sort()
     labels = []
+    files = []
     for f in filenames:
         img_id = f.split('/')[-1][:-4]
         genres = album_genres[img_id]
         album_label = [1 if g in genres else 0 for g in genre_list]
+        if 1 not in album_label: continue
         labels.append(album_label)
+        files.append(f)
     output_file = os.path.join(output_dir, 'y_' + split + '.npy')
     np.save(output_file, np.array(labels))
+    return files
 
 
 def save(filenames, output_dir):
@@ -139,10 +143,10 @@ if __name__ == '__main__':
         output_dir_genres = os.path.join(dir_split, 'genres')
         create_dir(output_dir_genres)
 
-        print("Processing {} data, saving to {}".format(split, output_dir_images))
-        save(files, output_dir_images)
-
         print("Generating {} labels, saving to {}".format(split, output_dir_genres))
-        generate_labels(files, album_genres, output_dir_genres, split)
+        files_present = generate_labels(files, album_genres, output_dir_genres, split)
+
+        print("Processing {} data, saving to {}".format(split, output_dir_images))
+        save(files_present, output_dir_images)
 
     print("Done building dataset")

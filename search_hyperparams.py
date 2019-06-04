@@ -13,6 +13,8 @@ parser.add_argument('--parent_dir', default='experiments/learning_rate',
                     help="Directory containing params.json")
 parser.add_argument('--data_dir', default='data/300x300_MUMU',
                     help="Directory containing the dataset")
+parser.add_argument('--param', default='learning_rate',
+                    help="Type of hyperparameter to search over")
 
 
 def launch_training_job(parent_dir, data_dir, job_name, params):

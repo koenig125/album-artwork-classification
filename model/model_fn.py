@@ -92,7 +92,7 @@ def model_fn(mode, inputs, params, reuse=False):
         predictions = predict(tf.nn.sigmoid(logits))
 
     # Define loss
-    loss = tf.losses.sigmoid_cross_entropy(multi_class_labels=labels, logits=logits) + tf.losses.get_regularization_loss()
+    loss = tf.losses.softmax_cross_entropy(onehot_labels=labels, logits=logits) + tf.losses.get_regularization_loss()
 
     # Define training step that minimizes the loss with the Adam optimizer
     if is_training:

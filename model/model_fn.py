@@ -88,6 +88,7 @@ def model_fn(mode, inputs, params, reuse=False):
     # Define loss
     loss = tf.losses.softmax_cross_entropy(onehot_labels=labels, logits=logits) + tf.losses.get_regularization_loss()
     accuracy = tf.reduce_mean(tf.cast(tf.equal(labels, predictions), tf.float32))
+    print(accuracy)
 
     # Define training step that minimizes the loss with the Adam optimizer
     if is_training:

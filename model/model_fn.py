@@ -83,7 +83,8 @@ def model_fn(mode, inputs, params, reuse=False):
     with tf.variable_scope('model', reuse=reuse):
         # Compute the output distribution of the model and the predictions
         logits = build_model(is_training, inputs, params)
-        predictions = tf.argmax(logits, 1)
+        predictions = [0] * params.num_labels
+        predictions[tf.argmax(logits, 1)] = 1
 
     # Define loss
     loss = tf.losses.softmax_cross_entropy(onehot_labels=labels, logits=logits) + tf.losses.get_regularization_loss()

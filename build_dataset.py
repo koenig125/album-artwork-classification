@@ -109,6 +109,7 @@ def generate_labels(filenames, album_genres, output_dir, split):
         if sum(album_label) != 1: continue
         labels.append(album_label)
         files.append(f)
+    print(len(filenames))
     print('Number of labels:', len(labels))
     print('Number of files:', len(files))
     output_file = os.path.join(output_dir, 'y_' + split + '.npy')

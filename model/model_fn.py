@@ -122,12 +122,11 @@ def model_fn(mode, inputs, params, reuse=False):
     tf.summary.scalar('accuracy', accuracy)
 
     # Add incorrectly labeled images
-    if mode == 'eval':
-        mask = tf.not_equal(tf.argmax(labels, 1), predictions)
-        for label in range(0, params.num_labels):
-            mask_label = tf.logical_and(mask, tf.equal(predictions, label))
-            incorrect_image_label = tf.boolean_mask(inputs['images'], mask_label)
-            tf.summary.image('incorrectly_labeled_{}'.format(label), incorrect_image_label)
+    mask = tf.not_equal(tf.argmax(labels, 1), predictions)
+    for label in range(0, params.num_labels):
+        mask_label = tf.logical_and(mask, tf.equal(predictions, label))
+        incorrect_image_label = tf.boolean_mask(inputs['images'], mask_label)
+        tf.summary.image('incorrectly_labeled_{}'.format(label), incorrect_image_label)
 
     # -----------------------------------------------------------
     # MODEL SPECIFICATION

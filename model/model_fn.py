@@ -88,7 +88,7 @@ def model_fn(mode, inputs, params, reuse=False):
 
     # Define loss
     loss = tf.losses.softmax_cross_entropy(onehot_labels=labels, logits=logits) + tf.losses.get_regularization_loss()
-    accuracy = tf.reduce_mean(tf.equal(tf.argmax(labels, 1), predictions))
+    accuracy = tf.reduce_mean(tf.cast(tf.equal(tf.argmax(labels, 1), predictions), tf.float32))
 
     # Define training step that minimizes the loss with the Adam optimizer
     if is_training:
@@ -124,7 +124,6 @@ def model_fn(mode, inputs, params, reuse=False):
     # Add incorrectly labeled images
     if mode == 'eval':
         print(labels)
-        print(tf.argmax(labels, 1))
         print(predictions)
         mask = tf.not_equal(tf.argmax(labels, 1), predictions)
         print(mask)

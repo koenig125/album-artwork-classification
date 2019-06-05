@@ -106,9 +106,10 @@ def generate_labels(filenames, album_genres, output_dir, split):
         img_id = f.split('/')[-1][:-4]
         genres = album_genres[img_id]
         album_label = [1 if g in genres else 0 for g in genre_list]
-        if 1 not in album_label or sum(album_label) >= 2: continue
+        if sum(album_label) != 1: continue
         labels.append(album_label)
         files.append(f)
+    print('Number of labels:', len(labels))
     print('Number of files:', len(files))
     output_file = os.path.join(output_dir, 'y_' + split + '.npy')
     np.save(output_file, np.array(labels))

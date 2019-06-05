@@ -61,12 +61,6 @@ def build_model(is_training, inputs, params):
     return logits
 
 
-def predict(probs, threshold=0.5):
-    cast_probs = tf.cast(probs, tf.float32)
-    threshold = float(threshold)
-    return tf.cast(tf.greater(cast_probs, threshold), tf.int64)
-
-
 def model_fn(mode, inputs, params, reuse=False):
     """Model function defining the graph operations.
 
@@ -89,10 +83,11 @@ def model_fn(mode, inputs, params, reuse=False):
     with tf.variable_scope('model', reuse=reuse):
         # Compute the output distribution of the model and the predictions
         logits = build_model(is_training, inputs, params)
-        predictions = predict(tf.nn.sigmoid(logits))
+        predictions = tf.argmax(logits, 1)
 
     # Define loss
     loss = tf.losses.softmax_cross_entropy(onehot_labels=labels, logits=logits) + tf.losses.get_regularization_loss()
+    accuracy = tf.reduce_mean(tf.cast(tf.equal(labels, predictions), tf.float32))
 
     # Define training step that minimizes the loss with the Adam optimizer
     if is_training:
@@ -111,12 +106,9 @@ def model_fn(mode, inputs, params, reuse=False):
     with tf.variable_scope("metrics"):
         metrics = {
             'loss': tf.metrics.mean(loss),
-            'auprc': tf.metrics.auc(labels=labels, predictions=tf.nn.sigmoid(logits),
-                                    curve='PR', summation_method='careful_interpolation'),
-            'auroc': tf.metrics.auc(labels=labels, predictions=tf.nn.sigmoid(logits),
-                                    curve='ROC', summation_method='trapezoidal'),
-            'precision': tf.metrics.precision(labels, predict(tf.nn.sigmoid(logits))),
-            'recall': tf.metrics.recall(labels, predict(tf.nn.sigmoid(logits))),
+            'accuracy': tf.metrics.accuracy(labels=labels, predictions=predictions),
+            'accuracy_pc': tf.metrics.mean_per_class_accuracy(labels=labels, predictions=predictions,
+                                                              num_classes=params.num_labels)
         }
 
     # Group the update ops for the tf.metrics
@@ -128,11 +120,8 @@ def model_fn(mode, inputs, params, reuse=False):
 
     # Summaries for training
     tf.summary.scalar('loss', loss)
-    tf.summary.scalar('auprc', metrics['auprc'][0])
-    tf.summary.scalar('auroc', metrics['auroc'][0])
-    tf.summary.scalar('precision', metrics['precision'][0])
-    tf.summary.scalar('recall', metrics['recall'][0])
-
+    tf.summary.scalar('accuracy', accuracy)
+    tf.summary.scalar('accuracy_pc', metrics['accuracy_pc'][0])
     # -----------------------------------------------------------
     # MODEL SPECIFICATION
     # Create the model specification and return it
@@ -141,7 +130,7 @@ def model_fn(mode, inputs, params, reuse=False):
     model_spec['variable_init_op'] = tf.global_variables_initializer()
     model_spec["predictions"] = predictions
     model_spec['loss'] = loss
-    model_spec['auprc'] = metrics['auprc'][0]
+    model_spec['accuracy'] = accuracy
     model_spec['metrics_init_op'] = metrics_init_op
     model_spec['metrics'] = metrics
     model_spec['update_metrics'] = update_metrics_op

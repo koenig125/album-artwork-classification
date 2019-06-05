@@ -122,6 +122,8 @@ def model_fn(mode, inputs, params, reuse=False):
 
     # Add incorrectly labeled images
     if mode == 'eval':
+        print(labels)
+        print(predictions)
         mask = tf.not_equal(labels, predictions)
         print(mask)
         for label in range(0, params.num_labels):

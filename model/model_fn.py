@@ -83,12 +83,12 @@ def model_fn(mode, inputs, params, reuse=False):
     with tf.variable_scope('model', reuse=reuse):
         # Compute the output distribution of the model and the predictions
         logits = build_model(is_training, inputs, params)
-        predictions = tf.cast(tf.one_hot(tf.argmax(logits, 1), params.num_labels), tf.int64)
+        # predictions = tf.cast(tf.one_hot(tf.argmax(logits, 1), params.num_labels), tf.int64)
+        predictions = tf.argmax(logits, 1)
 
     # Define loss
     loss = tf.losses.softmax_cross_entropy(onehot_labels=labels, logits=logits) + tf.losses.get_regularization_loss()
-    accuracy = tf.reduce_mean(tf.cast(tf.equal(labels, predictions), tf.float32))
-    print(accuracy)
+    accuracy = tf.reduce_mean(tf.equal(tf.argmax(labels, 1), predictions))
 
     # Define training step that minimizes the loss with the Adam optimizer
     if is_training:
@@ -124,8 +124,9 @@ def model_fn(mode, inputs, params, reuse=False):
     # Add incorrectly labeled images
     if mode == 'eval':
         print(labels)
+        print(tf.argmax(labels, 1))
         print(predictions)
-        mask = tf.not_equal(labels, predictions)
+        mask = tf.not_equal(tf.argmax(labels, 1), predictions)
         print(mask)
         for label in range(0, params.num_labels):
             mask_label = tf.logical_and(mask, tf.equal(predictions, tf.cast(tf.one_hot(label, params.num_labels), tf.int64)))

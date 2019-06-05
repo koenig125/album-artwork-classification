@@ -60,11 +60,13 @@ def input_fn(is_training, filenames, labels, params):
 
     # Create a Dataset serving batches of images and labels
     parse_fn = lambda f, l: _parse_function(f, l, params.image_size)
+    train_fn = lambda f, l: train_preprocess(f, l, params.use_random_flip)
 
     if is_training:
         dataset = (tf.data.Dataset.from_tensor_slices((tf.constant(filenames), tf.constant(labels)))
             .shuffle(num_samples)  # whole dataset into the buffer ensures good shuffling
             .map(parse_fn, num_parallel_calls=params.num_parallel_calls)
+            .map(train_fn, num_parallel_calls=params.num_parallel_calls)
             .batch(params.batch_size)
             .prefetch(1)  # make sure you always have one batch ready to serve
         )

@@ -106,7 +106,9 @@ def model_fn(mode, inputs, params, reuse=False):
     with tf.variable_scope("metrics"):
         metrics = {
             'loss': tf.metrics.mean(loss),
-            'accuracy': tf.metrics.accuracy(labels=labels, predictions=predictions)
+            'accuracy': tf.metrics.accuracy(labels=labels, predictions=predictions),
+            'precision': tf.metrics.precision(labels=labels, predictions=predictions),
+            'recall': tf.metrics.recall(labels=labels, predictions=predictions),
         }
 
     # Group the update ops for the tf.metrics
@@ -119,6 +121,9 @@ def model_fn(mode, inputs, params, reuse=False):
     # Summaries for training
     tf.summary.scalar('loss', loss)
     tf.summary.scalar('accuracy', accuracy)
+    tf.summary.scalar('precision', metrics['precision'][0])
+    tf.summary.scalar('recall', metrics['recall'][0])
+
     # -----------------------------------------------------------
     # MODEL SPECIFICATION
     # Create the model specification and return it

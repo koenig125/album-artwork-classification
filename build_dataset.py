@@ -107,7 +107,7 @@ def generate_labels(filenames, album_genres, output_dir, split):
         genres = album_genres[img_id]
         album_label = [1 if g in genres else 0 for g in genre_list]
         if sum(album_label) != 1: continue
-        labels.append(album_label)
+        labels.append(np.argmax(album_label))
         files.append(f)
     output_file = os.path.join(output_dir, 'y_' + split + '.npy')
     np.save(output_file, np.array(labels))

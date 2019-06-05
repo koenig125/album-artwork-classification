@@ -83,12 +83,11 @@ def model_fn(mode, inputs, params, reuse=False):
     with tf.variable_scope('model', reuse=reuse):
         # Compute the output distribution of the model and the predictions
         logits = build_model(is_training, inputs, params)
-        # predictions = tf.cast(tf.one_hot(tf.argmax(logits, 1), params.num_labels), tf.int64)
         predictions = tf.argmax(logits, 1)
 
     # Define loss
-    loss = tf.losses.softmax_cross_entropy(onehot_labels=labels, logits=logits) + tf.losses.get_regularization_loss()
-    accuracy = tf.reduce_mean(tf.cast(tf.equal(tf.argmax(labels, 1), predictions), tf.float32))
+    loss = tf.losses.sparse_softmax_cross_entropy(labels=labels, logits=logits) + tf.losses.get_regularization_loss()
+    accuracy = tf.reduce_mean(tf.cast(tf.equal(labels, predictions), tf.float32))
 
     # Define training step that minimizes the loss with the Adam optimizer
     if is_training:
@@ -107,7 +106,7 @@ def model_fn(mode, inputs, params, reuse=False):
     with tf.variable_scope("metrics"):
         metrics = {
             'loss': tf.metrics.mean(loss),
-            'accuracy': tf.metrics.accuracy(labels=tf.argmax(labels, 1), predictions=predictions),
+            'accuracy': tf.metrics.accuracy(labels=labels, predictions=predictions),
         }
 
     # Group the update ops for the tf.metrics
@@ -122,7 +121,7 @@ def model_fn(mode, inputs, params, reuse=False):
     tf.summary.scalar('accuracy', accuracy)
 
     # Add incorrectly labeled images
-    mask = tf.not_equal(tf.argmax(labels, 1), predictions)
+    mask = tf.not_equal(labels, predictions)
     for label in range(0, params.num_labels):
         mask_label = tf.logical_and(mask, tf.equal(predictions, label))
         incorrect_image_label = tf.boolean_mask(inputs['images'], mask_label)

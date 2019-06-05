@@ -123,6 +123,7 @@ def model_fn(mode, inputs, params, reuse=False):
     # Add incorrectly labeled images
     if mode == 'eval':
         mask = tf.not_equal(labels, predictions)
+        print(mask)
         for label in range(0, params.num_labels):
             mask_label = tf.logical_and(mask, tf.equal(predictions, tf.cast(tf.one_hot(label, params.num_labels), tf.int64)))
             incorrect_image_label = tf.boolean_mask(inputs['images'], mask_label)

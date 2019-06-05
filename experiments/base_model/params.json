@@ -14,7 +14,7 @@
     "num_parallel_calls": 4,
     "save_summary_steps": 25,
 
-    "regularization_rate": 0.0,
-    "use_dropout": false,
-    "dropout_rate": 0.0
+    "regularization_rate": 0.1,
+    "use_dropout": true,
+    "dropout_rate": 0.5
 }

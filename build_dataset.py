@@ -71,8 +71,8 @@ def generate_splits(filenames):
     filenames.sort()
     random.seed(230)
     random.shuffle(filenames)
-    split_1 = int(0.8 * len(filenames))
-    split_2 = int(0.9 * len(filenames))
+    split_1 = int(0.6 * len(filenames))
+    split_2 = int(0.8 * len(filenames))
     filenames_train = filenames[:split_1]
     filenames_dev = filenames[split_1:split_2]
     filenames_test = filenames[split_2:]

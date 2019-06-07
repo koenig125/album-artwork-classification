@@ -60,7 +60,7 @@ def evaluate(model_spec, model_dir, params, restore_from):
         restore_from: (string) directory or file containing weights to restore the graph
     """
     # Initialize tf.Saver
-    var_name_list = [v.name for v in tf.trainable_variables()]
+    var_name_list = [v for v in tf.trainable_variables()]
     print([v for v in var_name_list if v.name != 'confusion'])
     saver = tf.train.Saver([v for v in var_name_list if v.name != 'confusion'])
 

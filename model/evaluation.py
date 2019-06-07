@@ -30,23 +30,26 @@ def evaluate_sess(sess, model_spec, num_steps, writer=None, params=None):
     # compute metrics over the dataset
     for _ in range(num_steps):
         sess.run(update_metrics)
-
     print(sess.run(confusion))
 
     # Get the values of the metrics
     metrics_values = {k: v[0] for k, v in eval_metrics.items()}
     metrics_val = sess.run(metrics_values)
-    # metrics_string = " ; ".join("{}: {:05.3f}".format(k, v) for k, v in metrics_val.items())
-    # logging.info("- Eval metrics: " + metrics_string)
+    metrics_string = " ; ".join("{}: {:05.3f}".format(k, v) for k, v in metrics_val.items() if k != 'confusion')
+    logging.info("- Eval metrics: " + metrics_string)
 
     # Add summaries manually to writer at global_step_val
     if writer is not None:
         global_step_val = sess.run(global_step)
         for tag, val in metrics_val.items():
-            summ = tf.Summary(value=[tf.Summary.Value(tag=tag, simple_value=val)])
+            if tag == 'confusion':
+                confusion_image = tf.reshape(tf.cast(val, tf.float32), [1, params.num_labels, params.num_labels, 1])
+                summ = tf.Summary(value=[tf.Summary.Value(tag=tag, image=confusion_image)])
+            else:
+                summ = tf.Summary(value=[tf.Summary.Value(tag=tag, simple_value=val)])
             writer.add_summary(summ, global_step_val)
 
-    return metrics_val
+    return [val for val in metrics_val if val[0] != 'confusion']
 
 
 def evaluate(model_spec, model_dir, params, restore_from):
@@ -61,7 +64,6 @@ def evaluate(model_spec, model_dir, params, restore_from):
     """
     # Initialize tf.Saver
     var_name_list = [v for v in tf.trainable_variables()]
-    print([v for v in var_name_list if 'confusion' not in v.name])
     saver = tf.train.Saver([v for v in var_name_list if 'confusion' not in v.name])
 
     with tf.Session() as sess:

@@ -123,7 +123,7 @@ def model_fn(mode, inputs, params, reuse=False):
     # Summaries for training
     tf.summary.scalar('loss', loss)
     tf.summary.scalar('accuracy', accuracy)
-    tf.summary.image('confusion', confusion_image)
+
 
     # Add incorrectly labeled images
     mask = tf.not_equal(labels, predictions)

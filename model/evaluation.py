@@ -61,7 +61,8 @@ def evaluate(model_spec, model_dir, params, restore_from):
     """
     # Initialize tf.Saver
     var_name_list = [v.name for v in tf.trainable_variables()]
-    saver = tf.train.Saver([v for v in var_name_list if v != 'confusion'])
+    print([v for v in var_name_list if v.name != 'confusion'])
+    saver = tf.train.Saver([v for v in var_name_list if v.name != 'confusion'])
 
     with tf.Session() as sess:
         # Initialize the lookup table

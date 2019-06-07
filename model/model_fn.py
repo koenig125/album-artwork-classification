@@ -104,7 +104,6 @@ def model_fn(mode, inputs, params, reuse=False):
     batch_confusion = tf.confusion_matrix(labels, predictions, num_classes=params.num_labels, name='batch_confusion')
     confusion = tf.Variable(tf.zeros([params.num_labels, params.num_labels], dtype=tf.int32), name='confusion')
     confusion_update = confusion.assign(confusion + batch_confusion)
-    confusion_image = tf.reshape(tf.cast(confusion, tf.float32), [1, params.num_labels, params.num_labels, 1])
 
     with tf.variable_scope("metrics"):
         metrics = {
@@ -123,7 +122,6 @@ def model_fn(mode, inputs, params, reuse=False):
     # Summaries for training
     tf.summary.scalar('loss', loss)
     tf.summary.scalar('accuracy', accuracy)
-
 
     # Add incorrectly labeled images
     mask = tf.not_equal(labels, predictions)

@@ -32,6 +32,7 @@ def evaluate_sess(sess, model_spec, num_steps, writer=None, params=None):
         sess.run(update_metrics)
 
     sess.eval(confusion)
+
     # Get the values of the metrics
     metrics_values = {k: v[0] for k, v in eval_metrics.items()}
     metrics_val = sess.run(metrics_values)
@@ -59,6 +60,8 @@ def evaluate(model_spec, model_dir, params, restore_from):
         restore_from: (string) directory or file containing weights to restore the graph
     """
     # Initialize tf.Saver
+    var_name_list = [v.name for v in tf.trainable_variables()]
+    print(var_name_list)
     saver = tf.train.Saver()
 
     with tf.Session() as sess:

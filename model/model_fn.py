@@ -101,18 +101,17 @@ def model_fn(mode, inputs, params, reuse=False):
     # -----------------------------------------------------------
     # METRICS AND SUMMARIES
     # Metrics for evaluation using tf.metrics (average over whole dataset)
+    batch_confusion = tf.confusion_matrix(labels, predictions, num_classes=params.num_labels, name='batch_confusion')
+    confusion = tf.Variable(tf.zeros([params.num_labels, params.num_labels], dtype=tf.int32), name='confusion')
+    confusion_update = confusion.assign(confusion + batch_confusion)
+    confusion_image = tf.reshape(tf.cast(confusion, tf.float32), [1, params.num_labels, params.num_labels, 1])
+
     with tf.variable_scope("metrics"):
         metrics = {
             'loss': tf.metrics.mean(loss),
             'accuracy': tf.metrics.accuracy(labels=labels, predictions=predictions),
+            'confusion': confusion,
         }
-
-    if mode == 'eval':
-        batch_confusion = tf.confusion_matrix(labels, predictions, num_classes=params.num_labels, name='batch_confusion')
-        confusion = tf.Variable(tf.zeros([params.num_labels, params.num_labels], dtype=tf.int32), name='confusion')
-        confusion_update = confusion.assign(confusion + batch_confusion)
-        confusion_image = tf.reshape(tf.cast(confusion, tf.float32), [1, params.num_labels, params.num_labels, 1])
-        # tf.summary.image('confusion', confusion_image)
 
     # Group the update ops for the tf.metrics
     ops = [op for _, op in metrics.values()] + [confusion_update]
@@ -125,6 +124,7 @@ def model_fn(mode, inputs, params, reuse=False):
     # Summaries for training
     tf.summary.scalar('loss', loss)
     tf.summary.scalar('accuracy', accuracy)
+    tf.summary.image('confusion', confusion_image)
 
     # Add incorrectly labeled images
     mask = tf.not_equal(labels, predictions)
@@ -142,6 +142,7 @@ def model_fn(mode, inputs, params, reuse=False):
     model_spec["predictions"] = predictions
     model_spec['loss'] = loss
     model_spec['accuracy'] = accuracy
+    model_spec['confusion'] = confusion
     model_spec['metrics_init_op'] = metrics_init_op
     model_spec['metrics'] = metrics
     model_spec['update_metrics'] = update_metrics_op

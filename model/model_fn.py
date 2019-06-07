@@ -110,11 +110,11 @@ def model_fn(mode, inputs, params, reuse=False):
         metrics = {
             'loss': tf.metrics.mean(loss),
             'accuracy': tf.metrics.accuracy(labels=labels, predictions=predictions),
-            'confusion': confusion,
+            'confusion': (confusion, confusion_update)
         }
 
     # Group the update ops for the tf.metrics
-    update_metrics_op = tf.group(*[op for _, op in metrics.values()] + [confusion_update])
+    update_metrics_op = tf.group(*[op for _, op in metrics.values()])
 
     # Get the op to reset the local variables used in tf.metrics
     metric_variables = tf.get_collection(tf.GraphKeys.LOCAL_VARIABLES, scope="metrics")

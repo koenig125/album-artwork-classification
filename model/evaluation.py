@@ -31,7 +31,7 @@ def evaluate_sess(sess, model_spec, num_steps, writer=None, params=None):
     for _ in range(num_steps):
         sess.run(update_metrics)
 
-    sess.eval(confusion)
+    sess.run(confusion)
 
     # Get the values of the metrics
     metrics_values = {k: v[0] for k, v in eval_metrics.items()}

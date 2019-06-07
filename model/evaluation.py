@@ -61,7 +61,8 @@ def evaluate(model_spec, model_dir, params, restore_from):
     """
     # Initialize tf.Saver
     var_name_list = [v for v in tf.trainable_variables()]
-    print([v for v in var_name_list if v.name != 'confusion'])
+    # print([v for v in var_name_list if v.name != 'confusion'])
+    print([v.name for v in var_name_list])
     saver = tf.train.Saver([v for v in var_name_list if v.name != 'confusion'])
 
     with tf.Session() as sess:

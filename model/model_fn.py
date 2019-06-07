@@ -114,9 +114,7 @@ def model_fn(mode, inputs, params, reuse=False):
         }
 
     # Group the update ops for the tf.metrics
-    ops = [op for _, op in metrics.values()]
-    ops.extend(confusion_update)
-    update_metrics_op = tf.group(*ops)
+    update_metrics_op = tf.group(*[op for _, op in metrics.values()] + [confusion_update])
 
     # Get the op to reset the local variables used in tf.metrics
     metric_variables = tf.get_collection(tf.GraphKeys.LOCAL_VARIABLES, scope="metrics")

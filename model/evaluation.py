@@ -20,6 +20,7 @@ def evaluate_sess(sess, model_spec, num_steps, writer=None, params=None):
     """
     update_metrics = model_spec['update_metrics']
     eval_metrics = model_spec['metrics']
+    confusion = model_spec['confusion']
     global_step = tf.train.get_global_step()
 
     # Load the evaluation dataset into the pipeline and initialize the metrics init op
@@ -30,6 +31,7 @@ def evaluate_sess(sess, model_spec, num_steps, writer=None, params=None):
     for _ in range(num_steps):
         sess.run(update_metrics)
 
+    sess.eval(confusion)
     # Get the values of the metrics
     metrics_values = {k: v[0] for k, v in eval_metrics.items()}
     metrics_val = sess.run(metrics_values)
@@ -40,9 +42,6 @@ def evaluate_sess(sess, model_spec, num_steps, writer=None, params=None):
     if writer is not None:
         global_step_val = sess.run(global_step)
         for tag, val in metrics_val.items():
-            if tag == 'confusion_matrix':
-                print(val)
-                continue
             summ = tf.Summary(value=[tf.Summary.Value(tag=tag, simple_value=val)])
             writer.add_summary(summ, global_step_val)
 

@@ -33,13 +33,16 @@ def evaluate_sess(sess, model_spec, num_steps, writer=None, params=None):
     # Get the values of the metrics
     metrics_values = {k: v[0] for k, v in eval_metrics.items()}
     metrics_val = sess.run(metrics_values)
-    metrics_string = " ; ".join("{}: {:05.3f}".format(k, v) for k, v in metrics_val.items())
-    logging.info("- Eval metrics: " + metrics_string)
+    # metrics_string = " ; ".join("{}: {:05.3f}".format(k, v) for k, v in metrics_val.items())
+    # logging.info("- Eval metrics: " + metrics_string)
 
     # Add summaries manually to writer at global_step_val
     if writer is not None:
         global_step_val = sess.run(global_step)
         for tag, val in metrics_val.items():
+            if tag == 'confusion_matrix':
+                print(val)
+                continue
             summ = tf.Summary(value=[tf.Summary.Value(tag=tag, simple_value=val)])
             writer.add_summary(summ, global_step_val)
 

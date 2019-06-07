@@ -105,6 +105,8 @@ def model_fn(mode, inputs, params, reuse=False):
         metrics = {
             'loss': tf.metrics.mean(loss),
             'accuracy': tf.metrics.accuracy(labels=labels, predictions=predictions),
+            'confusion_matrix': tf.confusion_matrix(labels=labels, predictions=predictions,
+                                                    num_classes=params.num_labels)
         }
 
     # Group the update ops for the tf.metrics

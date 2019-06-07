@@ -70,6 +70,7 @@ def evaluate(model_spec, model_dir, params, restore_from):
     with tf.Session() as sess:
         # Initialize the lookup table
         sess.run(model_spec['variable_init_op'])
+        test_writer = tf.summary.FileWriter(os.path.join(model_dir, 'test_summaries'), sess.graph)
 
         # Reload weights from the weights subdirectory
         save_path = os.path.join(model_dir, restore_from)
@@ -79,7 +80,7 @@ def evaluate(model_spec, model_dir, params, restore_from):
 
         # Evaluate
         num_steps = (params.eval_size + params.batch_size - 1) // params.batch_size
-        metrics = evaluate_sess(sess, model_spec, num_steps)
+        metrics = evaluate_sess(sess, model_spec, num_steps, test_writer, params)
         metrics_name = '_'.join(restore_from.split('/'))
         save_path = os.path.join(model_dir, "metrics_test_{}.json".format(metrics_name))
         save_dict_to_json(metrics, save_path)
